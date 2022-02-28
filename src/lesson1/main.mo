@@ -1,16 +1,8 @@
-// actor {
-//     public func greet(name : Text) : async Text {
-//         return "Hello, " # name # "!";
-//     };
-// };
 import Nat "mo:base/Nat";
 import Array "mo:base/Array"
 
 actor {
   private func quickSort(sourceArr: [var Int], i: Nat, j: Nat): () {
-    if(sourceArr.size() < 2) {
-      return;
-    };
     if(i < j) {
       var val: Int = sourceArr[i];
       var l: Nat = i;
@@ -18,7 +10,7 @@ actor {
 
       while(l < r) {
         //从后往前找第一个小于val的数字
-        while(l < r and sourceArr[r] > val) {
+        while(l < r and sourceArr[r] >= val) {
           r -= 1;
         };
         //找到了数字
@@ -26,7 +18,7 @@ actor {
           sourceArr[l] := sourceArr[r];
         };
         //从前往后找第一个大于val的数字
-        while (l < r and sourceArr[l] < val) {
+        while (l < r and sourceArr[l] <= val) {
           l += 1;
         };
         //找到了数字
