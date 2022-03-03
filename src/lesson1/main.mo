@@ -1,45 +1,59 @@
 import Nat "mo:base/Nat";
-import Array "mo:base/Array"
+import Text "mo:base/Text";
+import Blob "mo:base/Blob";
 
 actor {
-  private func quickSort(sourceArr: [var Int], i: Nat, j: Nat): () {
-    if(i < j) {
-      var val: Int = sourceArr[i];
-      var l: Nat = i;
-      var r: Nat = j;
-
-      while(l < r) {
-        //从后往前找第一个小于val的数字
-        while(l < r and sourceArr[r] >= val) {
-          r -= 1;
-        };
-        //找到了数字
-        if(l < r) {
-          sourceArr[l] := sourceArr[r];
-        };
-        //从前往后找第一个大于val的数字
-        while (l < r and sourceArr[l] <= val) {
-          l += 1;
-        };
-        //找到了数字
-        if(l < r) {
-          sourceArr[r] := sourceArr[l];
-        };
-      };
-
-      sourceArr[l] := val;
-
-      if(r > 0) {
-        quickSort(sourceArr, i, l - 1);
-      };
-      
-      quickSort(sourceArr, l + 1, j);
+  public type HeaderField = (Text, Text);
+  public type HttpRequest = {
+    url : Text;
+    method : Text;
+    body : [Nat8];
+    headers : [HeaderField];
+  };
+  public type HttpResponse = {
+    body : [Nat8];
+    headers : [HeaderField];
+    streaming_strategy : ?StreamingStrategy;
+    status_code : Nat16;
+  };
+  public type Key = Text;
+  public type StreamingCallbackHttpResponse = {
+    token : ?StreamingCallbackToken;
+    body : [Nat8];
+  };
+  public type StreamingCallbackToken = {
+    key : Key;
+    sha256 : ?[Nat8];
+    index : Nat;
+    content_encoding : Text;
+  };
+  public type StreamingStrategy = {
+    #Callback : {
+      token : StreamingCallbackToken;
+      callback : shared query StreamingCallbackToken -> async ?StreamingCallbackHttpResponse;
     };
   };
 
-  public func qsort(sourceArr: [Int]): async [Int] {
-    let dynamicSourceArr:[var Int] = Array.thaw(sourceArr);
-    quickSort(dynamicSourceArr, 0, dynamicSourceArr.size() - 1);
-    return Array.freeze(dynamicSourceArr);
+  stable var currentValue: Nat = 0;
+
+  public func increment(): async () {
+    currentValue += 1;
+  };
+
+  public query func get(): async Nat {
+    currentValue
+  };
+
+  public func set(value: Nat): async () {
+    currentValue := value;
+  };
+
+  public query func http_request(req: HttpRequest): async HttpResponse {
+    {
+      status_code = 200;
+      headers = [];
+      body = Blob.toArray(Text.encodeUtf8("<html><body><h1> " # Nat.toText(currentValue) # " </h1></body></html>"));
+      streaming_strategy = null;
+    }
   }
-}
+};
